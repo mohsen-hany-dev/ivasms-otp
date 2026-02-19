@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "name": "demo-group-main",
+    "chat_id": "-1001234567890",
+    "enabled": true
+  },
+  {
+    "name": "demo-group-2",
+    "chat_id": "-1001111111111",
+    "enabled": true
+  }
+]

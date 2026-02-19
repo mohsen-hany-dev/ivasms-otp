@@ -1,0 +1,8 @@
+{
+  "API_BASE_URL": "https://your-api-domain.example.com",
+  "API_START_DATE": "2025-01-01",
+  "API_SESSION_TOKEN": "",
+  "TELEGRAM_BOT_TOKEN": "123456789:EXAMPLE_BOT_TOKEN",
+  "TELEGRAM_CHAT_ID": "-1001234567890",
+  "BOT_LIMIT": "30"
+}

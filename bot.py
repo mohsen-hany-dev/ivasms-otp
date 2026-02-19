@@ -17,6 +17,7 @@ ACCOUNTS_FILE = BASE_DIR / "accounts.json"
 GROUPS_FILE = BASE_DIR / "groups.json"
 STORE_FILE = BASE_DIR / "sent_codes_store.json"
 TOKEN_CACHE_FILE = BASE_DIR / "token_cache.json"
+SETTINGS_FILE = BASE_DIR / "runtime_config.json"
 DAILY_STORE_DIR = BASE_DIR / "daily_messages"
 TOKEN_TTL_SECONDS = 2 * 60 * 60
 TOKEN_REFRESH_SKEW_SECONDS = 5 * 60
@@ -70,6 +71,37 @@ def load_platforms() -> dict[str, str]:
 
 def load_accounts() -> list[dict[str, str]]:
     rows = load_json_list(ACCOUNTS_FILE)
+    # Backward compatible loader: supports JSON object {"accounts":[...]}
+    # and simple line format: "email password".
+    if not rows and ACCOUNTS_FILE.exists():
+        try:
+            raw = ACCOUNTS_FILE.read_text(encoding="utf-8").strip()
+            if raw.startswith("{"):
+                obj = json.loads(raw)
+                maybe_rows = obj.get("accounts") if isinstance(obj, dict) else None
+                if isinstance(maybe_rows, list):
+                    rows = [x for x in maybe_rows if isinstance(x, dict)]
+            elif raw:
+                parsed_rows: list[dict[str, str]] = []
+                for idx, line in enumerate(raw.splitlines(), start=1):
+                    v = line.strip()
+                    if not v or v.startswith("#"):
+                        continue
+                    parts = v.split()
+                    if len(parts) >= 2:
+                        email = parts[0].strip()
+                        password = " ".join(parts[1:]).strip()
+                        parsed_rows.append(
+                            {
+                                "name": f"account_{idx}",
+                                "email": email,
+                                "password": password,
+                                "enabled": True,
+                            }
+                        )
+                rows = parsed_rows
+        except Exception:
+            rows = []
     out: list[dict[str, str]] = []
     for r in rows:
         enabled = bool(r.get("enabled", True))
@@ -329,6 +361,25 @@ def normalize_start_date(raw: str) -> str:
     return date.today().isoformat()
 
 
+def load_settings() -> dict[str, str]:
+    if not SETTINGS_FILE.exists():
+        return {}
+    try:
+        data = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return {}
+        return {str(k): str(v).strip() for k, v in data.items() if v is not None}
+    except Exception:
+        return {}
+
+
+def save_settings(settings: dict[str, str]) -> None:
+    SETTINGS_FILE.write_text(
+        json.dumps(settings, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def api_login(api_base: str, email: str, password: str) -> str | None:
     try:
         r = requests.post(
@@ -481,13 +532,14 @@ def main() -> None:
     args = parser.parse_args()
 
     load_dotenv(BASE_DIR / ".env")
+    persisted = load_settings()
 
-    default_api = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").strip()
-    default_start = os.getenv("API_START_DATE", "2025-01-01").strip()
-    default_api_token = os.getenv("API_SESSION_TOKEN", "").strip()
-    default_tg_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-    default_chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
-    default_limit = os.getenv("BOT_LIMIT", "30").strip()
+    default_api = (persisted.get("API_BASE_URL") or os.getenv("API_BASE_URL", "http://127.0.0.1:8000")).strip()
+    default_start = (persisted.get("API_START_DATE") or os.getenv("API_START_DATE", "2025-01-01")).strip()
+    default_api_token = (persisted.get("API_SESSION_TOKEN") or os.getenv("API_SESSION_TOKEN", "")).strip()
+    default_tg_token = (persisted.get("TELEGRAM_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN", "")).strip()
+    default_chat_id = (persisted.get("TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID", "")).strip()
+    default_limit = (persisted.get("BOT_LIMIT") or os.getenv("BOT_LIMIT", "30")).strip()
 
     print("=== NumPlus Telegram Bot Client ===")
     api_base = ask_missing("API domain", default_api).rstrip("/")
@@ -506,7 +558,7 @@ def main() -> None:
     if not api_token and not accounts:
         api_token = ask("API session token (missing and no accounts found)")
 
-    # Always ask start date every run.
+    # Keep start date interactive every run, while other core settings stay persisted.
     start_date_raw = ask("Start date YYYY-MM-DD", default_start or date.today().isoformat())
     start_date = normalize_start_date(start_date_raw)
     if start_date != start_date_raw:
@@ -517,6 +569,21 @@ def main() -> None:
         limit = max(1, min(100, int(limit_raw)))
     except Exception:
         limit = 30
+
+    # Persist effective runtime values to avoid repeated prompts.
+    saved_chat_id = default_chat_id
+    if target_groups:
+        saved_chat_id = str(target_groups[0].get("chat_id", "")).strip() or default_chat_id
+    save_settings(
+        {
+            "API_BASE_URL": api_base,
+            "API_START_DATE": start_date,
+            "API_SESSION_TOKEN": api_token,
+            "TELEGRAM_BOT_TOKEN": tg_token,
+            "TELEGRAM_CHAT_ID": saved_chat_id,
+            "BOT_LIMIT": str(limit),
+        }
+    )
 
     try:
         run_loop(start_date, api_base, api_token, tg_token, target_groups, limit, args.once)

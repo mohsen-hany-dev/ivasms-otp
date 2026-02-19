@@ -90,9 +90,49 @@ def set_platform_emoji_id(key: str, emoji_id: str) -> None:
     print(f"set emoji_id for platform '{key}'")
 
 
+def _ask(prompt: str, default: str | None = None) -> str:
+    if default is None:
+        return input(f"{prompt}: ").strip()
+    value = input(f"{prompt} [{default}]: ").strip()
+    return value or default
+
+
+def interactive_menu() -> None:
+    while True:
+        print("\n=== Bot CLI Menu ===")
+        print("1) Add account")
+        print("2) Add group")
+        print("3) List accounts")
+        print("4) List groups")
+        print("5) Exit")
+        choice = input("Choose (1-5): ").strip()
+
+        if choice == "1":
+            name = _ask("Account name")
+            email = _ask("Email")
+            password = _ask("Password")
+            enabled_raw = _ask("Enabled? (y/n)", "y").lower()
+            add_account(name, email, password, enabled=enabled_raw != "n")
+        elif choice == "2":
+            name = _ask("Group name")
+            chat_id = _ask("Telegram chat_id (example: -1001234567890)")
+            enabled_raw = _ask("Enabled? (y/n)", "y").lower()
+            add_group(name, chat_id, enabled=enabled_raw != "n")
+            print("group saved. Run bot.py and messages will be sent to enabled groups.")
+        elif choice == "3":
+            list_accounts()
+        elif choice == "4":
+            list_groups()
+        elif choice == "5":
+            print("bye")
+            return
+        else:
+            print("invalid choice")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Manage bot accounts/groups/store")
-    sub = p.add_subparsers(dest="cmd", required=True)
+    sub = p.add_subparsers(dest="cmd")
 
     p_add_acc = sub.add_parser("add-account")
     p_add_acc.add_argument("--name", required=True)
@@ -116,6 +156,9 @@ def main() -> None:
     p_set_emoji.add_argument("--emoji-id", required=True)
 
     args = p.parse_args()
+    if not args.cmd:
+        interactive_menu()
+        return
 
     if args.cmd == "add-account":
         add_account(args.name, args.email, args.password, enabled=not args.disabled)
