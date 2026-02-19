@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "name": "demo-account-1",
+    "email": "demo1@example.com",
+    "password": "DemoPassword#1",
+    "enabled": true
+  },
+  {
+    "name": "demo-account-2",
+    "email": "demo2@example.com",
+    "password": "DemoPassword#2",
+    "enabled": true
+  }
+]

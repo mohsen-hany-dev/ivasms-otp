@@ -1,93 +1,98 @@
 # NumPlus Telegram Bot Client
 
-Standalone Telegram bot client that reads OTP messages from NumPlus API and forwards new messages to Telegram groups.
+بوت يقرأ رسائل OTP من API ويرسل الرسائل الجديدة إلى جروبات تيليجرام.
 
-## Features
-- Polls API every 30 seconds.
-- Supports multiple API accounts.
-- Stores account API tokens in `token_cache.json`.
-- Refreshes account tokens automatically every 2 hours (or on failure).
-- Supports multiple Telegram groups.
-- Stores sent messages in a daily file (`daily_messages/messages_YYYY-MM-DD.json`).
-- Automatically deletes previous days and keeps current day file only.
-- Formats message with:
-  - quoted header (service short + country code + flag + number)
-  - message body as code block
-  - copy-code button
+## المتطلبات
+- Python 3.10+
+- ملف `requirements.txt`
 
-## Files
-- `bot.py`: main runner
-- `cli.py`: account/group/store management
-- `accounts.json`: API accounts list
-- `groups.json`: Telegram groups list
-- `platforms.json`: service names, shortcuts, emojis, custom emoji ids
-- `country_codes.json`: country metadata
-- `daily_messages/messages_YYYY-MM-DD.json`: sent message state for current day
-- `token_cache.json`: cached account tokens with expiry metadata
-- `.env`: runtime config
-
-## Setup
+## التثبيت
 ```bash
-cd telegram_bot_client
 python -m venv .venv
-.venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Environment
-Set values in `.env`:
+## ملفات الإعداد
 
-```env
-API_BASE_URL=http://127.0.0.1:8000
-API_START_DATE=2025-01-01
-API_SESSION_TOKEN=
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
-BOT_LIMIT=30
-USE_CUSTOM_EMOJI=0
+### 1) `runtime_config.json`
+هذا ملف القيم الأساسية الثابتة (توكن البوت، رابط API، تاريخ البداية الافتراضي...)
+
+مثال توضيحي:
+```json
+{
+  "API_BASE_URL": "https://your-api-domain.example.com",
+  "API_START_DATE": "2025-01-01",
+  "API_SESSION_TOKEN": "",
+  "TELEGRAM_BOT_TOKEN": "123456789:EXAMPLE_BOT_TOKEN",
+  "TELEGRAM_CHAT_ID": "-1001234567890",
+  "BOT_LIMIT": "30"
+}
 ```
 
-Notes:
-- If `accounts.json` has valid accounts, `API_SESSION_TOKEN` can stay empty.
-- Bot asks for missing values at runtime.
-- Bot always asks for start date on each run.
-- Cached account tokens expire after 2 hours and are renewed automatically.
+### 2) `accounts.json`
+حسابات تسجيل الدخول إلى API (يمكن إضافة أكثر من حساب):
+```json
+[
+  {
+    "name": "demo-account-1",
+    "email": "demo1@example.com",
+    "password": "DemoPassword#1",
+    "enabled": true
+  }
+]
+```
 
-## Run
-Run continuous mode:
+### 3) `groups.json`
+الجروبات التي سيرسل لها البوت:
+```json
+[
+  {
+    "name": "demo-group",
+    "chat_id": "-1001234567890",
+    "enabled": true
+  }
+]
+```
+
+## CLI سهل (تفاعلي)
+شغّل:
+```bash
+python cli.py
+```
+ستظهر قائمة اختيار مباشرة:
+1. Add account
+2. Add group
+3. List accounts
+4. List groups
+5. Exit
+
+مهم:
+- عند اختيار `Add group` وحفظ `chat_id` بشكل صحيح، البوت سيقرأه من `groups.json` ويرسل له تلقائيًا.
+
+## أوامر CLI المباشرة
+```bash
+python cli.py add-account --name acc1 --email you@example.com --password "YOUR_PASSWORD"
+python cli.py add-group --name main --chat-id -1001234567890
+python cli.py list-accounts
+python cli.py list-groups
+python cli.py clear-store
+python cli.py clear-store --start-date 2025-01-01
+python cli.py set-platform-emoji-id --key whatsapp --emoji-id 5472096095280572227
+```
+
+## التشغيل
+تشغيل مستمر:
 ```bash
 python bot.py
 ```
 
-Run one cycle only:
+تشغيل دورة واحدة ثم خروج:
 ```bash
 python bot.py --once
 ```
 
-## CLI
-Add account:
-```bash
-python cli.py add-account --name acc1 --email you@example.com --password YOUR_PASSWORD
-```
-
-Add group:
-```bash
-python cli.py add-group --name main --chat-id -1001234567890
-```
-
-List config:
-```bash
-python cli.py list-accounts
-python cli.py list-groups
-```
-
-Clear stored sent messages:
-```bash
-python cli.py clear-store
-python cli.py clear-store --start-date 2025-01-01
-```
-
-Set custom emoji id for a service:
-```bash
-python cli.py set-platform-emoji-id --key whatsapp --emoji-id 5472096095280572227
-```
+## ملاحظات التشغيل
+- البوت يسأل عن `Start date` كل مرة تشغيل.
+- باقي القيم الأساسية تُقرأ من `runtime_config.json` أو `.env`.
+- إذا كان عندك حسابات صالحة في `accounts.json` لا تحتاج `API_SESSION_TOKEN` غالبًا.

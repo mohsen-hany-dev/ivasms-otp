@@ -10,5 +10,15 @@
   {"key": "instagram", "name_ar": "انستجرام", "name_en": "Instagram", "short": "Ig", "emoji": "📸", "emoji_id": "5470138474956860872"},
   {"key": "discord", "name_ar": "ديسكورد", "name_en": "Discord", "short": "Dc", "emoji": "🎮", "emoji_id": "5472282432436708545"},
   {"key": "netflix", "name_ar": "نتفلكس", "name_en": "Netflix", "short": "Nf", "emoji": "🎬", "emoji_id": "5269714564823395294"},
-  {"key": "twitter", "name_ar": "تويتر", "name_en": "Twitter/X", "short": "Tw", "emoji": "🐦", "emoji_id": "5471974195518777283"}
+  {"key": "twitter", "name_ar": "تويتر", "name_en": "Twitter/X", "short": "Tw", "emoji": "🐦", "emoji_id": "5471974195518777283"},
+  {"key": "amazon", "name_ar": "أمازون", "name_en": "Amazon", "short": "Am", "emoji": "📦", "emoji_id": ""},
+  {"key": "microsoft", "name_ar": "مايكروسوفت", "name_en": "Microsoft", "short": "Ms", "emoji": "🪟", "emoji_id": ""},
+  {"key": "uber", "name_ar": "اوبر", "name_en": "Uber", "short": "Ub", "emoji": "🚕", "emoji_id": ""},
+  {"key": "linkedin", "name_ar": "لينكدإن", "name_en": "LinkedIn", "short": "Li", "emoji": "💼", "emoji_id": ""},
+  {"key": "paypal", "name_ar": "بايبال", "name_en": "PayPal", "short": "Pp", "emoji": "💳", "emoji_id": ""},
+  {"key": "binance", "name_ar": "باينانس", "name_en": "Binance", "short": "Bn", "emoji": "🟨", "emoji_id": ""},
+  {"key": "wechat", "name_ar": "وي شات", "name_en": "WeChat", "short": "Wc", "emoji": "💬", "emoji_id": ""},
+  {"key": "line", "name_ar": "لاين", "name_en": "LINE", "short": "Ln", "emoji": "🟩", "emoji_id": ""},
+  {"key": "yahoo", "name_ar": "ياهو", "name_en": "Yahoo", "short": "Yh", "emoji": "📧", "emoji_id": ""},
+  {"key": "github", "name_ar": "جيت هب", "name_en": "GitHub", "short": "Gh", "emoji": "🐙", "emoji_id": ""}
 ]
